@@ -1,8 +1,8 @@
-# bun-template
+# compress-to-url
 
-[![npm version](https://badge.fury.io/js/bun-template.svg)](https://www.npmjs.com/package/bun-template)
+[![npm version](https://badge.fury.io/js/compress-to-url.svg)](https://www.npmjs.com/package/compress-to-url)
 
-Bun template for creating projects using bunjs
+Compress a whole webpage into a URL.
 
 ![icon](icon.png)
 
@@ -18,8 +18,4 @@ Bun template for creating projects using bunjs
 
 ## Github Source
 
-<https://github.com/jacklehamster/bun-template/>
-
-## Create a new repo
-
-[Create repo with this template](https://github.com/new?owner=jacklehamster&visibility=public&template_owner=jacklehamster&template_name=bun-template)
+<https://github.com/jacklehamster/compress-to-url/>
