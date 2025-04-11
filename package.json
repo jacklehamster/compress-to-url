@@ -1,5 +1,5 @@
 {
-  "name": "compress-to-url",
+  "name": "@dobuki/compress-to-url",
   "module": "src/index.ts",
   "description": "Compress HTML to fit in a URL.",
   "version": "1.0.0",

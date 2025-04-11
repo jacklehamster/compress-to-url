@@ -16,6 +16,6 @@
   },
   "peerDependencies": {
     "typescript": "^5.0.0",
-    "compress-to-url": "link:compress-to-url"
+    "@dobuki/compress-to-url": "link:@dobuki/compress-to-url"
   }
 }
