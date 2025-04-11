@@ -7,21 +7,9 @@ import { compressToUrl, decompressFromUrl } from "compress-to-url";
 
 // Banner component for URL-passed errors
 const ErrorBanner: React.FC<{ message: string; onClose: () => void }> = ({ message, onClose }) => (
-  <div style={{
-    backgroundColor: '#ffebee',
-    color: '#c62828',
-    padding: '10px',
-    marginBottom: '10px',
-    borderRadius: '4px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  }}>
+  <div className="error-banner">
     <span>{message}</span>
-    <button
-      onClick={onClose}
-      style={{ background: 'none', border: 'none', color: '#c62828', cursor: 'pointer' }}
-    >
+    <button className="error-banner-close" onClick={onClose}>
       ✕
     </button>
   </div>
@@ -150,7 +138,7 @@ const App: React.FC = () => {
           Shareable Link: <a href={shareLink()} target="_blank">{shareLink()}</a>
         </div>
       )}
-      {error && <div style={{ color: 'red' }}>{error}</div>}
+      {error && <div className="red">{error}</div>}
     </div>
   );
 };
