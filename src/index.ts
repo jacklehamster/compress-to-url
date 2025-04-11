@@ -1,8 +1,6 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
-// compress-to-url/src/index.ts
-
 // Node.js zlib (dynamic import)
 let zlib: typeof import('zlib') | undefined;
 if (typeof process !== 'undefined' && process.versions?.node) {
@@ -13,7 +11,7 @@ interface CompressOptions {
   maxSize?: number;
   inputType?: 'string' | 'binary';
   mimeType?: string;
-  normalizeWhitespace?: boolean; // New: Optional whitespace normalization
+  normalizeWhitespace?: boolean;
 }
 
 interface CompressResult {
@@ -30,9 +28,9 @@ interface DecompressResult {
   mimeType: string;
 }
 
-// Base85 encoding
+const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!()*+-;<=>?@^_`{|}~',:/\"[]";
+
 function base85Encode(bytes: Uint8Array): string {
-  const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~';
   let result = '';
   let buffer = 0n;
   let bufferBits = 0;
@@ -52,7 +50,6 @@ function base85Encode(bytes: Uint8Array): string {
     buffer <<= BigInt(paddingBits);
     const value = Number(buffer & 0x1fn);
     result += alphabet[value];
-    const bytesLeft = Math.ceil((bufferBits + paddingBits) / 8);
     const totalBytes = bytes.length;
     const paddingNeeded = (totalBytes % 4 === 0 ? 0 : 4 - (totalBytes % 4)) || 0;
     result += '~'.repeat(paddingNeeded);
@@ -61,9 +58,7 @@ function base85Encode(bytes: Uint8Array): string {
   return result;
 }
 
-// Base85 decoding
 function base85Decode(str: string): Uint8Array {
-  const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~';
   let buffer = 0n;
   let bufferBits = 0;
   const bytes: number[] = [];
@@ -95,7 +90,6 @@ function base85Decode(str: string): Uint8Array {
   return new Uint8Array(bytes);
 }
 
-// Compress function
 async function compressToUrl(input: string | ArrayBuffer | Uint8Array, options: CompressOptions = {}): Promise<CompressResult> {
   const { maxSize = 2083, inputType = 'string', mimeType = inputType === 'string' ? 'text/html' : 'application/octet-stream', normalizeWhitespace = false } = options;
 
@@ -103,7 +97,6 @@ async function compressToUrl(input: string | ArrayBuffer | Uint8Array, options: 
   const encoder = new TextEncoder();
   if (inputType === 'string') {
     if (typeof input !== 'string') throw new Error('Expected string input for inputType "string"');
-    // Preserve newlines unless normalizeWhitespace is true
     data = encoder.encode(normalizeWhitespace ? input.replace(/\s+/g, ' ').trim() : input);
   } else if (inputType === 'binary') {
     if (typeof input === 'string') throw new Error('Expected binary input for inputType "binary"');
@@ -113,7 +106,10 @@ async function compressToUrl(input: string | ArrayBuffer | Uint8Array, options: 
   }
 
   const mimePrefix = `${mimeType}:`;
-  const fullData = encoder.encode(mimePrefix + new TextDecoder().decode(data));
+  const mimePrefixBytes = encoder.encode(mimePrefix);
+  const fullData = new Uint8Array(mimePrefixBytes.length + data.length);
+  fullData.set(mimePrefixBytes);
+  fullData.set(data, mimePrefixBytes.length);
 
   let compressedBytes: Uint8Array;
   if (zlib) {
@@ -144,7 +140,6 @@ async function compressToUrl(input: string | ArrayBuffer | Uint8Array, options: 
   return { payload, size };
 }
 
-// Decompress function
 async function decompressFromUrl(payload: string, options: DecompressOptions = {}): Promise<DecompressResult> {
   const { outputType = 'auto' } = options;
 
@@ -170,21 +165,21 @@ async function decompressFromUrl(payload: string, options: DecompressOptions = {
     decompressedBytes = new Uint8Array(buffer);
   }
 
-  const decoder = new TextDecoder();
-  const fullText = decoder.decode(decompressedBytes);
-  const mimeEndIndex = fullText.indexOf(':');
-  if (mimeEndIndex === -1) {
+  // Find the colon byte (ASCII 58) to separate MIME type and data
+  const colonIndex = decompressedBytes.indexOf(58);
+  if (colonIndex === -1) {
     throw new Error('MIME type not found in payload');
   }
-  const mimeType = fullText.slice(0, mimeEndIndex);
-  const dataText = fullText.slice(mimeEndIndex + 1);
-  const dataBytes = decompressedBytes.slice(mimeEndIndex + 1);
+
+  const decoder = new TextDecoder();
+  const mimeType = decoder.decode(decompressedBytes.subarray(0, colonIndex));
+  const dataBytes = decompressedBytes.subarray(colonIndex + 1);
 
   const isTextType = mimeType.startsWith('text/') || mimeType === 'application/json';
   const returnAsString = outputType === 'string' || (outputType === 'auto' && isTextType);
 
   if (returnAsString) {
-    return { data: dataText, mimeType };
+    return { data: decoder.decode(dataBytes), mimeType };
   }
   return { data: dataBytes, mimeType };
 }
