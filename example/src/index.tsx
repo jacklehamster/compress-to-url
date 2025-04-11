@@ -5,13 +5,36 @@ import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { compressToUrl, decompressFromUrl } from "compress-to-url";
 
+// Banner component for URL-passed errors
+const ErrorBanner: React.FC<{ message: string; onClose: () => void }> = ({ message, onClose }) => (
+  <div style={{
+    backgroundColor: '#ffebee',
+    color: '#c62828',
+    padding: '10px',
+    marginBottom: '10px',
+    borderRadius: '4px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  }}>
+    <span>{message}</span>
+    <button
+      onClick={onClose}
+      style={{ background: 'none', border: 'none', color: '#c62828', cursor: 'pointer' }}
+    >
+      ✕
+    </button>
+  </div>
+);
+
 // React Component
 const App: React.FC = () => {
   const [htmlInput, setHtmlInput] = useState('');
   const [urlOutput, setUrlOutput] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null); // For compression/decompression errors
+  const [urlError, setUrlError] = useState<string | null>(null); // For ?error= param
 
-  // Debounce function without "this"
+  // Debounce function
   function debounce(func: (...args: any[]) => void, wait: number) {
     let timeout: number | undefined;
     return (...args: any[]) => {
@@ -60,10 +83,16 @@ const App: React.FC = () => {
     setUrlOutput(e.target.value);
   };
 
-  // Handle URL parameter on load
+  // Handle URL parameters on load
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const encodedHtml = urlParams.get("u");
+    const errorParam = urlParams.get("error");
+
+    if (errorParam) {
+      setUrlError(decodeURIComponent(errorParam)); // Decode in case it’s URL-encoded
+    }
+
     if (encodedHtml) {
       setUrlOutput(encodedHtml);
       decompressFromUrl(encodedHtml)
@@ -85,8 +114,17 @@ const App: React.FC = () => {
     return url.toString();
   };
 
+  // Close the error banner
+  const closeErrorBanner = () => {
+    setUrlError(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("error");
+    window.history.replaceState({}, document.title, url.toString());
+  };
+
   return (
     <div className="container">
+      {urlError && <ErrorBanner message={urlError} onClose={closeErrorBanner} />}
       <h1>HTML to URL Converter</h1>
       <label htmlFor="code">HTML Input:</label>
       <textarea
