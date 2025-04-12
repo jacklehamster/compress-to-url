@@ -9,7 +9,6 @@ import { MetaFields, ActiveFields } from './types';
 import {
   debounce,
   compressCode,
-  decompressCode,
   parseMetaFields,
   updateActiveFields,
   socialMetadataTemplate,
@@ -50,18 +49,6 @@ export default function App() {
       setError(`Error compressing: ${err.message}`);
     }
   }, 300);
-
-  const convertToText = async () => {
-    try {
-      const data = await decompressCode(urlOutput);
-      setHtmlInput(data);
-      setMetaFields(parseMetaFields(data));
-      setActiveFields(updateActiveFields(data));
-      setError(null);
-    } catch (err: any) {
-      setError(`Error decompressing: ${err.message}`);
-    }
-  };
 
   const insertMetadata = (type: 'social' | 'jsonld') => {
     const lines = htmlInput.split('\n');
@@ -227,14 +214,7 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
     if (errorParam) setUrlError(decodeURIComponent(errorParam));
     if (encodedHtml) {
       setUrlOutput(encodedHtml);
-      decompressCode(encodedHtml)
-        .then(data => {
-          setHtmlInput(data);
-          setMetaFields(parseMetaFields(data));
-          setActiveFields(updateActiveFields(data));
-          setError(null);
-        })
-        .catch(err => setError(`Error decoding URL parameter: ${err.message}`));
+      // No decompression here; editor starts with empty textarea or DEFAULT_HTML
     } else if ((window as any).DEFAULT_HTML) {
       const defaultHtml = (window as any).DEFAULT_HTML;
       setHtmlInput(defaultHtml);
@@ -292,7 +272,6 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
           style={{ minWidth: '300px', width: '100%', maxWidth: '800px', minHeight: '300px', height: 'auto', maxHeight: '600px' }}
         />
         <div className="button-group">
-          <button onClick={convertToText}>Convert from URL</button>
           <button onClick={() => insertMetadata('social')}>Add Social Metadata</button>
           <button onClick={() => insertMetadata('jsonld')}>Add JSON-LD</button>
           <button onClick={() => setIsRedirectOpen(true)}>Generate Redirect</button>

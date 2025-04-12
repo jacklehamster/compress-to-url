@@ -1,4 +1,4 @@
-import { compressToUrl, decompressFromUrl } from 'compress-to-url';
+import { compressToUrl } from 'compress-to-url';
 
 export const SCRAPER_URL = ''; // Blank in example, extracted from HTML in production
 
@@ -53,11 +53,6 @@ export async function compressCode(code: string, cache: Map<string, string>) {
   });
   cache.set(code, result.payload);
   return result.payload;
-}
-
-export async function decompressCode(payload: string) {
-  const { data } = await decompressFromUrl(payload);
-  return data as string;
 }
 
 export async function scrapeMetadata(url: string) {
