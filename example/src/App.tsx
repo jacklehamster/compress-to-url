@@ -175,6 +175,9 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
     url: string;
     includeJsonLd: boolean;
   }) => {
+    const body = image ? `<div class="container">
+    <a href="${redirectUrl}"><img src="${image}" alt="${title}"></a>
+  </div>` : `<a href="${redirectUrl}">${title}</a>`;
     const newHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -204,11 +207,7 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
   }
   </style>
 </head>
-<body>
-  <div class="container">
-    <a href="${redirectUrl}"><img src="${image}" alt="${title}"></a>
-  </div>
-</body>
+<body>${body}</body>
 </html>`;
     setHtmlInput(newHtml);
     setMetaFields(parseMetaFields(newHtml));

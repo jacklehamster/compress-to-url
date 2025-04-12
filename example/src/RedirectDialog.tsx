@@ -20,6 +20,7 @@ export default function RedirectDialog({ isOpen, onClose, onGenerate }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState('');
+  const [confirmedImage, setConfirmedImage] = useState('');
   const [url, setUrl] = useState('');
   const [includeJsonLd, setIncludeJsonLd] = useState(true);
 
@@ -32,17 +33,28 @@ export default function RedirectDialog({ isOpen, onClose, onGenerate }: Props) {
     const scrape = debounce(async () => {
       const metadata = await scrapeMetadata(confirmedUrl);
       if (!metadata) return;
-      if (!title) setTitle(metadata.title || '');
-      if (!description) setDescription(metadata.description || '');
-      if (!image) setImage(metadata.image_url || '');
-      if (!url) setUrl(metadata.url || redirectUrl);
+      setTitle(metadata.title || '');
+      setDescription(metadata.description || '');
+      setImage(metadata.image_url || '');
+      setConfirmedImage(metadata.image_url || '');
+      setUrl(metadata.url || redirectUrl);
     }, 500);
     scrape();
-  }, [confirmedUrl, title, description, image, url]);
+  }, [confirmedUrl]);
+
+  const makeUrl = (url: string) => url.startsWith("http") ? url : `https://${url}`;
+
+  const confirmImage = (image: string) => {
+    setConfirmedImage(image);
+  };
 
   const handleUrlConfirm = () => {
-    if (redirectUrl !== confirmedUrl) {
-      setConfirmedUrl(redirectUrl);
+    const fixedUrl = makeUrl(redirectUrl);
+    if (fixedUrl !== redirectUrl) {
+      setRedirectUrl(fixedUrl);
+    }
+    if (fixedUrl !== confirmedUrl) {
+      setConfirmedUrl(fixedUrl);
     }
   };
 
@@ -99,11 +111,12 @@ export default function RedirectDialog({ isOpen, onClose, onGenerate }: Props) {
             type="url"
             value={image}
             onChange={e => setImage(e.target.value)}
+            onBlur={e => confirmImage(e.target.value)}
             placeholder="Enter image URL"
           />
-          {image && (
+          {confirmedImage && (
             <img
-              src={image}
+              src={confirmedImage}
               alt="Thumbnail preview"
               style={{ maxWidth: '200px', maxHeight: '150px', marginTop: '10px', objectFit: 'contain' }}
               onError={e => (e.currentTarget.style.display = 'none')}
