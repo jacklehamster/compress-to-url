@@ -368,7 +368,8 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
   }, []);
 
   const shareLink = () => {
-    const url = new URL(window.location.href);
+    const url = new URL(window.location.origin);
+    url.pathname = '/';
     url.searchParams.set("u", urlOutput);
     url.searchParams.delete("edit");
     return url.toString();
