@@ -195,9 +195,19 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
       .replace('[Your Description]', description)
       .replace('[Your Image URL]', image)
       .replace('[Your URL]', url) : ''}
+  <style>
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  </style>
 </head>
 <body>
-  <p>Redirecting to <a href="${redirectUrl}">${redirectUrl}</a>...</p>
+  <div class="container">
+    <a href="${redirectUrl}"><img src="${image}" alt="${title}"></a>
+  </div>
 </body>
 </html>`;
     setHtmlInput(newHtml);
