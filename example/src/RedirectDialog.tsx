@@ -16,6 +16,7 @@ interface Props {
 
 export default function RedirectDialog({ isOpen, onClose, onGenerate }: Props) {
   const [redirectUrl, setRedirectUrl] = useState('');
+  const [confirmedUrl, setConfirmedUrl] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState('');
@@ -27,10 +28,9 @@ export default function RedirectDialog({ isOpen, onClose, onGenerate }: Props) {
   }, [redirectUrl]);
 
   useEffect(() => {
-    if (!getScraperUrl()) return;
+    if (!getScraperUrl() || !confirmedUrl) return;
     const scrape = debounce(async () => {
-      if (!redirectUrl) return;
-      const metadata = await scrapeMetadata(redirectUrl);
+      const metadata = await scrapeMetadata(confirmedUrl);
       if (!metadata) return;
       if (!title) setTitle(metadata.title || '');
       if (!description) setDescription(metadata.description || '');
@@ -38,7 +38,19 @@ export default function RedirectDialog({ isOpen, onClose, onGenerate }: Props) {
       if (!url) setUrl(metadata.url || redirectUrl);
     }, 500);
     scrape();
-  }, [redirectUrl, title, description, image, url]);
+  }, [confirmedUrl, title, description, image, url]);
+
+  const handleUrlConfirm = () => {
+    if (redirectUrl !== confirmedUrl) {
+      setConfirmedUrl(redirectUrl);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleUrlConfirm();
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -60,6 +72,8 @@ export default function RedirectDialog({ isOpen, onClose, onGenerate }: Props) {
             type="url"
             value={redirectUrl}
             onChange={e => setRedirectUrl(e.target.value)}
+            onBlur={handleUrlConfirm}
+            onKeyDown={handleKeyDown}
             placeholder="https://example.com"
             required
           />
