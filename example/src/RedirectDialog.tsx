@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { debounce, scrapeMetadata, getScraperUrl } from './utils';
 
 interface Props {
   isOpen: boolean;
@@ -24,6 +25,20 @@ export default function RedirectDialog({ isOpen, onClose, onGenerate }: Props) {
   useEffect(() => {
     setUrl(redirectUrl);
   }, [redirectUrl]);
+
+  useEffect(() => {
+    if (!getScraperUrl()) return;
+    const scrape = debounce(async () => {
+      if (!redirectUrl) return;
+      const metadata = await scrapeMetadata(redirectUrl);
+      if (!metadata) return;
+      if (!title) setTitle(metadata.title || '');
+      if (!description) setDescription(metadata.description || '');
+      if (!image) setImage(metadata.image_url || '');
+      if (!url) setUrl(metadata.url || redirectUrl);
+    }, 500);
+    scrape();
+  }, [redirectUrl, title, description, image, url]);
 
   if (!isOpen) return null;
 

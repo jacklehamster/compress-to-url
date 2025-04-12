@@ -1,5 +1,11 @@
 import { compressToUrl, decompressFromUrl } from 'compress-to-url';
 
+export const SCRAPER_URL = ''; // Blank in example, extracted from HTML in production
+
+export function getScraperUrl(): string {
+  return (window as any).SCRAPER_URL || SCRAPER_URL;
+}
+
 export function debounce(func: (...args: any[]) => void, wait: number) {
   let timeout: number | undefined;
   return (...args: any[]) => {
@@ -54,11 +60,23 @@ export async function decompressCode(payload: string) {
   return data as string;
 }
 
+export async function scrapeMetadata(url: string) {
+  const scraperUrl = getScraperUrl();
+  if (!scraperUrl) return null;
+  try {
+    const response = await fetch(`${scraperUrl}?url=${encodeURIComponent(url)}`);
+    if (!response.ok) throw new Error('Scrape failed');
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
 export function parseMetaFields(html: string) {
   const fields = { title: '', description: '', image_url: '', url: '' };
   const patterns = [
     { key: 'title', regex: [/<title>(.*?)<\/title>/i, /<meta[^>]*property="og:title"[^>]*content="([^"]*)"/i, /<meta[^>]*name="twitter:title"[^>]*content="([^"]*)"/i] },
-    { key: 'description', regex: [/<meta[^>]*property="og:description"[^>]*content="([^"]*)"/i, /<meta[^>]*name="twitter:description"[^>]*content="([^"]*)"/i, /"description":\s*"([^"]*)"/i] },
+    { key: 'description', regex: [/<meta[^>]*property="og:description"[^>]*content="([^"]*)"/i, /<meta[^>]*name="twitter:description"[^>]*content="([^"]*)"/i, /<meta[^>]*name="description"[^>]*content="([^"]*)"/i, /"description":\s*"([^"]*)"/i] },
     { key: 'image_url', regex: [/<meta[^>]*property="og:image"[^>]*content="([^"]*)"/i, /<meta[^>]*name="twitter:image"[^>]*content="([^"]*)"/i, /"image":\s*"([^"]*)"/i] },
     { key: 'url', regex: [/<meta[^>]*property="og:url"[^>]*content="([^"]*)"/i, /"url":\s*"([^"]*)"/i] },
   ];
