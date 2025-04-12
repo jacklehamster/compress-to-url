@@ -2,7 +2,7 @@
   "name": "compress-to-url",
   "module": "src/index.ts",
   "description": "Compress HTML to fit in a URL.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "keywords": [],
   "repository": {
     "type": "git",
