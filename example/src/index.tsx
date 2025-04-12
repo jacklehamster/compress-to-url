@@ -31,8 +31,17 @@ const InstructionsModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           <li><strong>Edit Metadata</strong>: Use the right panel to update fields (title, description, image, URL). Changes sync to all related tags in the HTML.</li>
           <li><strong>Test the Link</strong>: The shareable link compresses your HTML. Share it on social platforms or use preview tools (e.g., X’s Card Validator) to check how it renders.</li>
         </ul>
+        <h3>Generate Redirect Pages</h3>
+        <p>Create a redirect page to share links with custom social metadata, especially for websites with missing or incorrect metadata (e.g., to change the thumbnail image):</p>
+        <ul>
+          <li><strong>Click "Generate Redirect"</strong>: Opens a dialog to input a URL.</li>
+          <li><strong>Enter Details</strong>: Provide the redirect URL and optional metadata (title, description, image, URL).</li>
+          <li><strong>Include JSON-LD</strong>: Check the box to add structured data (optional).</li>
+          <li><strong>Generate</strong>: Creates an HTML page with a <code>&lt;meta http-equiv="refresh"&gt;</code> tag to redirect to your URL, plus social metadata for sharing.</li>
+          <li><strong>Share</strong>: The textarea updates with the HTML, and the shareable link lets you share the redirect page on social media with your custom metadata.</li>
+        </ul>
         <h3>Other Uses</h3>
-        <p>Beyond social metadata, this tool has versatile applications:</p>
+        <p>Beyond social metadata and redirects, this tool has versatile applications:</p>
         <ul>
           <li><strong>Share Lightweight HTML</strong>: Create small web snippets (e.g., a landing page mockup) and share them via a compressed URL without hosting.</li>
           <li><strong>Prototype Web Content</strong>: Quickly test HTML/CSS layouts by editing in the textarea and sharing the result instantly.</li>
@@ -83,6 +92,102 @@ const JSON_LD_TEMPLATE = `
   </script>
 `;
 
+const RedirectDialog: React.FC<{ isOpen: boolean; onClose: () => void; onGenerate: (data: { redirectUrl: string; title: string; description: string; image: string; url: string; includeJsonLd: boolean }) => void }> = ({ isOpen, onClose, onGenerate }) => {
+  const [redirectUrl, setRedirectUrl] = useState('');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [image, setImage] = useState('');
+  const [url, setUrl] = useState('');
+  const [includeJsonLd, setIncludeJsonLd] = useState(true);
+
+  // Auto-fill Canonical URL with Redirect URL
+  useEffect(() => {
+    setUrl(redirectUrl);
+  }, [redirectUrl]);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onGenerate({ redirectUrl, title, description, image, url, includeJsonLd });
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" style={{ width: '700px', maxWidth: '90vw' }} onClick={e => e.stopPropagation()}>
+        <button type="button" className="modal-close" onClick={onClose}>✕</button>
+        <h2>Generate Redirect with Metadata</h2>
+        <form onSubmit={handleSubmit}>
+          <label htmlFor="redirect-url">Redirect URL:</label>
+          <input
+            id="redirect-url"
+            type="url"
+            value={redirectUrl}
+            onChange={e => setRedirectUrl(e.target.value)}
+            placeholder="https://example.com"
+            required
+          />
+          <label htmlFor="meta-title">Title:</label>
+          <input
+            id="meta-title"
+            type="text"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="Enter title"
+          />
+          <label htmlFor="meta-description">Description:</label>
+          <input
+            id="meta-description"
+            type="text"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="Enter description"
+          />
+          <label htmlFor="meta-image">Image URL:</label>
+          <input
+            id="meta-image"
+            type="url"
+            value={image}
+            onChange={e => setImage(e.target.value)}
+            placeholder="Enter image URL"
+          />
+          {image && (
+            <img
+              src={image}
+              alt="Thumbnail preview"
+              style={{ maxWidth: '200px', maxHeight: '150px', marginTop: '10px', objectFit: 'contain' }}
+              onError={e => (e.currentTarget.style.display = 'none')}
+            />
+          )}
+          <label htmlFor="meta-url">Canonical URL:</label>
+          <input
+            id="meta-url"
+            type="url"
+            value={url}
+            onChange={e => setUrl(e.target.value)}
+            placeholder="Enter URL"
+          />
+          <div style={{ marginTop: '10px', display: "flex" }}>
+            <input
+              type="checkbox"
+              id="include-jsonld"
+              checked={includeJsonLd}
+              onChange={e => setIncludeJsonLd(e.target.checked)}
+              style={{ verticalAlign: 'middle', marginRight: '5px', width: 50 }}
+            />
+            <label htmlFor="include-jsonld" style={{ verticalAlign: 'middle' }}>Include JSON-LD</label>
+          </div>
+          <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
+            <button type="submit">Generate</button>
+            <button type="button" onClick={onClose}>Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   const [htmlInput, setHtmlInput] = useState<string>((window as any).DEFAULT_HTML || '');
   const [urlOutput, setUrlOutput] = useState('');
@@ -100,6 +205,7 @@ const App: React.FC = () => {
     url: false,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRedirectOpen, setIsRedirectOpen] = useState(false);
 
   function debounce(func: (...args: any[]) => void, wait: number) {
     let timeout: number | undefined;
@@ -335,6 +441,44 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
     }
   };
 
+  const generateRedirectPage = ({ redirectUrl, title, description, image, url, includeJsonLd }: { redirectUrl: string; title: string; description: string; image: string; url: string; includeJsonLd: boolean }) => {
+    const newHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0;url=${redirectUrl}">
+  ${title ? `<title>${title}</title>` : ''}
+  ${title ? `<meta property="og:title" content="${title}">` : ''}
+  ${title ? `<meta name="twitter:title" content="${title}">` : ''}
+  ${description ? `<meta property="og:description" content="${description}">` : ''}
+  ${description ? `<meta name="twitter:description" content="${title}">` : ''}
+  ${image ? `<meta property="og:image" content="${image}">` : ''}
+  ${image ? `<meta name="twitter:image" content="${image}">` : ''}
+  ${url ? `<meta property="og:url" content="${url}">` : ''}
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  ${includeJsonLd && title ? `
+  <script type="application/ld+json">
+    {
+      "@context": "http://schema.org",
+      "@type": "WebPage",
+      "name": "${title}",
+      "description": "${description}",
+      "image": "${image}",
+      "url": "${url}"
+    }
+  </script>` : ''}
+</head>
+<body>
+  <p>Redirecting to <a href="${redirectUrl}">${redirectUrl}</a>...</p>
+</body>
+</html>`;
+    setHtmlInput(newHtml);
+    setMetaFields(parseMetaFields(newHtml));
+    updateActiveFields(newHtml);
+    encodeAsYouType(newHtml);
+  };
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const encodedHtml = urlParams.get("u");
@@ -359,9 +503,11 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
       encodeAsYouType(defaultHtml);
     }
 
-    // Add Escape key listener for modal
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsModalOpen(false);
+      if (e.key === 'Escape') {
+        setIsModalOpen(false);
+        setIsRedirectOpen(false);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -395,11 +541,18 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
         {urlError && <ErrorBanner message={urlError} onClose={closeErrorBanner} />}
         <h1>HTML to URL Converter</h1>
         <label htmlFor="code">HTML Input:</label>
-        <textarea id="code" placeholder="Enter your HTML here..." value={htmlInput} onChange={handleInputChange} />
+        <textarea
+          id="code"
+          placeholder="Enter your HTML here..."
+          value={htmlInput}
+          onChange={handleInputChange}
+          style={{ minWidth: '300px', width: '100%', maxWidth: '800px', minHeight: '300px', height: 'auto', maxHeight: '600px' }}
+        />
         <div className="button-group">
           <button onClick={convertToText}>Convert from URL</button>
           <button onClick={insertSocialMetadata}>Add Social Metadata</button>
           <button onClick={insertJsonLd}>Add JSON-LD</button>
+          <button onClick={() => setIsRedirectOpen(true)}>Generate Redirect</button>
         </div>
         <hr />
         <div id="counter">Characters: {urlOutput.length}</div>
@@ -409,6 +562,11 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
           </div>
         )}
         {error && <div className="red">{error}</div>}
+        <RedirectDialog
+          isOpen={isRedirectOpen}
+          onClose={() => setIsRedirectOpen(false)}
+          onGenerate={generateRedirectPage}
+        />
       </div>
       <div className="right-panel">
         <h2>Metadata</h2>
