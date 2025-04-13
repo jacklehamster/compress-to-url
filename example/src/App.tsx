@@ -265,6 +265,18 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
         <a href="#" className="instructions-link" onClick={e => { e.preventDefault(); setIsModalOpen(true); }}>
           How to Use This Tool
         </a>
+
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6776419018919510" crossOrigin="anonymous"></script>
+        <ins className="adsbygoogle"
+          style={{display:"block"}}
+          data-ad-client="ca-pub-6776419018919510"
+          data-ad-slot="9355236520"
+          data-ad-format="auto"
+          data-full-width-responsive="true"></ins>
+        <script>
+            (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+
         <InstructionsModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       </div>
       <div className="container">
