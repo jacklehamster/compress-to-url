@@ -76,7 +76,7 @@ export default function RedirectDialog({ isOpen, onClose, onGenerate }: Props) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" style={{ width: '700px', maxWidth: '90vw' }} onClick={e => e.stopPropagation()}>
         <button type="button" className="modal-close" onClick={onClose}>✕</button>
-        <h2>Generate Redirect with Metadata</h2>
+        <h2>Generate page with Metadata redirecting to your site</h2>
         <form onSubmit={handleSubmit}>
           <label htmlFor="redirect-url">Redirect URL:</label>
           <input

@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import ErrorBanner from './ErrorBanner';
 import InstructionsModal from './InstructionsModal';
 import RedirectDialog from './RedirectDialog';
@@ -14,12 +14,14 @@ import {
   socialMetadataTemplate,
   jsonLdTemplate,
 } from './utils';
+import { decompressFromUrl } from '.';
 
 const encodingCache = new Map<string, string>();
 
 export default function App() {
   const [htmlInput, setHtmlInput] = useState<string>((window as any).DEFAULT_HTML || '');
   const [urlOutput, setUrlOutput] = useState('');
+  const [showShort, setShowShort] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
   const [metaFields, setMetaFields] = useState<MetaFields>({
@@ -45,6 +47,7 @@ export default function App() {
       url.searchParams.set('edit', '1');
       window.history.replaceState({}, document.title, url.toString());
       setError(null);
+      setShowShort("");
     } catch (err: any) {
       setError(`Error compressing: ${err.message}`);
     }
@@ -223,6 +226,7 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
     if (errorParam) setUrlError(decodeURIComponent(errorParam));
     if (encodedHtml) {
       setUrlOutput(encodedHtml);
+      decompressFromUrl(encodedHtml).then(html => setHtmlInput(html.data.toString()));
       // No decompression here; editor starts with empty textarea or DEFAULT_HTML
     } else if ((window as any).DEFAULT_HTML) {
       const defaultHtml = (window as any).DEFAULT_HTML;
@@ -242,13 +246,17 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const shareLink = () => {
+  const shareLink = useCallback(() => {
     const url = new URL(window.location.origin);
     url.pathname = '/';
     url.searchParams.set('u', urlOutput);
     url.searchParams.delete('edit');
     return url.toString();
-  };
+  }, [urlOutput]);
+
+  const generateTiny = useCallback(() => {
+    setShowShort(`https://tinyurl.com/api-create.php?url=${shareLink()}`);
+  }, [shareLink]);
 
   return (
     <div className="layout">
@@ -281,9 +289,9 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
           style={{ minWidth: '300px', width: '100%', maxWidth: '800px', minHeight: '300px', height: 'auto', maxHeight: '600px' }}
         />
         <div className="button-group">
-          <button onClick={() => insertMetadata('social')}>Add Social Metadata</button>
-          <button onClick={() => insertMetadata('jsonld')}>Add JSON-LD</button>
-          <button onClick={() => setIsRedirectOpen(true)}>Generate Redirect</button>
+          <button type="button" onClick={() => insertMetadata('social')}>Add Social Metadata</button>
+          <button type="button" onClick={() => insertMetadata('jsonld')}>Add JSON-LD</button>
+          <button type="button" onClick={() => setIsRedirectOpen(true)}>Generate Redirect</button>
         </div>
         <hr />
         <div id="counter">Characters: {urlOutput.length}</div>
@@ -292,6 +300,7 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
             Shareable Link: <a href={shareLink()} target="_blank">{shareLink()}</a>
           </div>
         )}
+        {showShort ? <iframe title="short url" style={{width: "100%", height: 40, border: 0 }} src={showShort}></iframe> : <button type="button" onClick={generateTiny}>Generate TinyURL</button>}
         {error && <div className="red">{error}</div>}
         <RedirectDialog
           isOpen={isRedirectOpen}
