@@ -185,7 +185,7 @@ ${htmlInput.trim() || '<h1>Your Content Here</h1>'}
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0;url=${redirectUrl}">
+  <meta http-equiv="refresh" content="1;url=${redirectUrl}">
   ${title ? `<title>${title}</title>` : ''}
   ${title ? `<meta property="og:title" content="${title}">` : ''}
   ${title ? `<meta name="twitter:title" content="${title}">` : ''}
