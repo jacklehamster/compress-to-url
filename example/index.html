@@ -4,7 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Site on the fly</title>
+    <meta property="og:site_name" content="Site on the fly" />
     <meta property="og:title" content="Site on the fly" />
+    <meta property="og:locale" content="en_US" />
     <meta
       property="og:description"
       content="Store a mini website entirely within the URL."
@@ -21,29 +23,45 @@
     <meta name="twitter:title" content="Site on the fly" />
     <meta
       name="twitter:description"
-      content="Store a mini website entirely within the URL."
+      content="Store a mini website entirely within the URL. Within this tool, you can write any HTML and generate a link to serve that HTML from a server. Useful for testing metadatas to properly show thumbnails in Social Media posts."
     />
     <meta
       name="twitter:image"
       content="https://compress-to-url.dobuki.net/example/img.png"
     />
+    <meta name="twitter:site" content="@jacklehamster" />
+    <meta name="twitter:creator" content="@jacklehamster" />
+    <meta name="author" content="Vincent Le Quang" />
+    <meta
+      name="keywords"
+      content="HTML, URL, web tool, metadata, social media"
+    />
     <meta
       name="description"
       content="Store a mini website entirely within the URL."
     />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://onthefly.dobuki.net" />
+
     <link rel="stylesheet" href="styles.css" />
     <script type="application/ld+json">
       {
         "@context": "http://schema.org",
         "@type": "WebApplication",
-        "name": "HTML to URL Converter",
+        "name": "Site on the fly",
+        "author": { "@type": "Person", "name": "Vincent Le Quang" },
         "url": "https://compress-to-url.dobuki.net",
-        "description": "Store a mini website entirely within the URL.",
+        "description": "Store a mini website entirely within the URL. Within this tool, you can write any HTML and generate a link to serve that HTML from a server. Useful for testing metadatas to properly show thumbnails in Social Media posts.",
         "image": "https://compress-to-url.dobuki.net/example/img.png",
         "operatingSystem": "Web",
         "applicationCategory": "Utilities",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-        "creator": { "@type": "Organization", "name": "Dobuki" }
+        "creator": { "@type": "Organization", "name": "Dobuki" },
+        "potentialAction": {
+          "@type": "UseAction",
+          "target": "https://onthefly.dobuki.net",
+          "name": "Generate a website"
+        }
       }
     </script>
   </head>
